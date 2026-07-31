@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+@plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -89,11 +90,11 @@
   --text-headline-lg--font-weight: 600;
 
   /* DevForge spacing scale */
-  --spacing-gap-xs: 4px;
-  --spacing-gap-sm: 8px;
-  --spacing-gap-md: 16px;
-  --spacing-gap-lg: 24px;
-  --spacing-gap-xl: 40px;
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 40px;
   --spacing-gutter: 24px;
   --spacing-container-max: 1440px;
 
