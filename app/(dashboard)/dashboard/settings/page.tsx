@@ -11,6 +11,8 @@ import {
     DialogFooter,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { useTheme, type ThemeSetting } from "@/hooks/use-theme";
+import { PreferencesSection } from "./preferences-section";
 
 /**
  * Stitch design tokens (hardcoded as arbitrary Tailwind values since these
@@ -178,7 +180,7 @@ export default function SettingsPage() {
     const [notifySecurity, setNotifySecurity] = useState(true);
     const [notifyWeekly, setNotifyWeekly] = useState(false);
 
-    const [theme, setTheme] = useState<"dark" | "light" | "system">("dark");
+    const { theme, setTheme } = useTheme();
 
     useEffect(() => {
         async function loadUser() {
