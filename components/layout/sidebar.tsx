@@ -15,18 +15,25 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-
-const navItems = [
-    { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { label: "Repositories", href: "/dashboard/repositories", icon: FolderGit2 },
-    { label: "Architecture", href: "/dashboard/architecture", icon: GitBranch },
-    { label: "Dependencies", href: "/dashboard/dependencies", icon: Network },
-    { label: "Reports", href: "/dashboard/reports", icon: FileText },
-    { label: "Settings", href: "/dashboard/settings", icon: Settings },
-];
+import { useRepositoryStore } from "@/store/repository-store";
 
 export function Sidebar() {
     const pathname = usePathname();
+    const currentRepository = useRepositoryStore((s) => s.currentRepository);
+
+    const repoBase = currentRepository
+        ? `/dashboard/repositories/${currentRepository.owner}/${currentRepository.repo}`
+        : null;
+
+    const navItems = [
+        { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, requiresRepo: false },
+        { label: "Repositories", href: "/dashboard/repositories", icon: FolderGit2, requiresRepo: false },
+        { label: "Architecture", href: repoBase ? `${repoBase}/architecture` : null, icon: GitBranch, requiresRepo: true },
+        { label: "Dependencies", href: repoBase ? `${repoBase}/dependencies` : null, icon: Network, requiresRepo: true },
+        { label: "Metrics", href: repoBase ? `${repoBase}/metrics` : null, icon: Network, requiresRepo: true },
+        { label: "Reports", href: repoBase ? `${repoBase}/report` : null, icon: FileText, requiresRepo: true },
+        { label: "Settings", href: "/dashboard/settings", icon: Settings, requiresRepo: false },
+    ];
 
     return (
         <aside className="hidden md:flex flex-col w-[280px] shrink-0 h-screen sticky top-0 bg-sidebar border-r border-sidebar-border">
@@ -41,18 +48,35 @@ export function Sidebar() {
             </div>
 
             <div className="px-lg mb-md">
-                <Button className="w-full gap-2">
-                    <Plus className="size-4" />
-                    Analyze New Repo
-                </Button>
+                <Link href="/dashboard/repositories">
+                    <Button className="w-full gap-2">
+                        <Plus className="size-4" />
+                        Analyze New Repo
+                    </Button>
+                </Link>
             </div>
 
             <nav className="flex-1 px-sm space-y-1">
-                {navItems.map(({ label, href, icon: Icon }) => {
-                    const isActive = pathname === href;
+                {navItems.map(({ label, href, icon: Icon, requiresRepo }) => {
+                    const isActive = href !== null && pathname === href;
+                    const isDisabled = href === null;
+
+                    if (isDisabled) {
+                        return (
+                            <div
+                                key={label}
+                                title="Select a repository first"
+                                className="flex items-center gap-3 px-md py-3 rounded-lg text-sidebar-foreground/30 cursor-not-allowed select-none"
+                            >
+                                <Icon className="size-5" />
+                                <span className="text-label-caps uppercase">{label}</span>
+                            </div>
+                        );
+                    }
+
                     return (
                         <Link
-                            key={href}
+                            key={label}
                             href={href}
                             className={cn(
                                 "flex items-center gap-3 px-md py-3 rounded-lg text-sidebar-foreground/70 transition-colors",
