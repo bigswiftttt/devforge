@@ -137,3 +137,36 @@ export function parseRepoInput(input: string): { owner: string; repo: string } |
 
     return null;
 }
+export async function fetchGitignore(
+    owner: string,
+    repo: string,
+    accessToken: string,
+): Promise<string | null> {
+    try {
+        const data = await githubFetch<{ content: string; encoding: string }>(
+            `https://api.github.com/repos/${owner}/${repo}/contents/.gitignore`,
+            accessToken,
+        );
+        return data.encoding === "base64" ? Buffer.from(data.content, "base64").toString("utf-8") : data.content;
+    } catch {
+        return null;
+    }
+}
+
+export async function fetchPackageLock(
+    owner: string,
+    repo: string,
+    accessToken: string,
+): Promise<Record<string, unknown> | null> {
+    try {
+        const data = await githubFetch<{ content: string; encoding: string }>(
+            `https://api.github.com/repos/${owner}/${repo}/contents/package-lock.json`,
+            accessToken,
+        );
+        const decoded =
+            data.encoding === "base64" ? Buffer.from(data.content, "base64").toString("utf-8") : data.content;
+        return JSON.parse(decoded);
+    } catch {
+        return null;
+    }
+}

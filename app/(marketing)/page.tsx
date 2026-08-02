@@ -9,6 +9,10 @@ import {
     BarChart3,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+export const metadata = {
+    title: "DevForge | Command Center for your Codebase",
+    description: "Navigate complexity with DevForge. Parse repository structure, visualize architecture and dependencies, and get AI-generated engineering insights.",
+};
 
 export default function LandingPage() {
     return (

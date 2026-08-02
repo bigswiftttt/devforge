@@ -6,7 +6,7 @@ import { Loader2, Sparkles } from "lucide-react";
 import { parseRepository } from "@/lib/parser/normalize";
 import { createClient } from "@/lib/auth/supabase";
 import type { NormalizedRepository } from "@/types/repository";
-import type { RepositoryInsight, RepositorySummaryInput } from "@/lib/ai/groq";
+import type { RepositoryInsight } from "@/lib/ai/groq";
 import { AIReportCard } from "@/components/ai/ai-report-card";
 import { Button } from "@/components/ui/button";
 
@@ -19,13 +19,31 @@ export default function AIReportPage() {
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
+        if (repoData) {
+            document.title = `${repoData.fullName} | DevForge`;
+        }
+    }, [repoData]);
+
+    useEffect(() => {
         async function run() {
             try {
                 const supabase = createClient();
                 const {
                     data: { session },
                 } = await supabase.auth.getSession();
-                const accessToken = session?.provider_token;
+
+                if (!session?.user) {
+                    setError("Not authenticated.");
+                    return;
+                }
+
+                const { data: profile } = await supabase
+                    .from("profiles")
+                    .select("github_access_token")
+                    .eq("id", session.user.id)
+                    .single();
+
+                const accessToken = profile?.github_access_token;
 
                 if (!accessToken) {
                     setError("No GitHub access token found.");
@@ -48,7 +66,7 @@ export default function AIReportPage() {
         setGenerating(true);
         setError(null);
 
-        const summary: RepositorySummaryInput = {
+        const summary = {
             fullName: repoData.fullName,
             description: repoData.description,
             primaryLanguage: repoData.primaryLanguage,
@@ -65,13 +83,12 @@ export default function AIReportPage() {
                         .map((f) => f.path.split("/")[0]),
                 ),
             ).slice(0, 15),
-            dependencyCount: repoData.packageJson
-                ? Object.keys(repoData.packageJson.dependencies).length
-                : 0,
-            devDependencyCount: repoData.packageJson
-                ? Object.keys(repoData.packageJson.devDependencies).length
-                : 0,
             recentCommitMessages: repoData.recentCommits.map((c) => c.message).slice(0, 10),
+            dependencies: repoData.packageJson?.dependencies ?? {},
+            devDependencies: repoData.packageJson?.devDependencies ?? {},
+            fileTree: repoData.fileTree.map((f) => ({ path: f.path, type: f.type })),
+            gitignoreContent: repoData.gitignoreContent,
+            packageLock: repoData.packageLock,
         };
 
         try {

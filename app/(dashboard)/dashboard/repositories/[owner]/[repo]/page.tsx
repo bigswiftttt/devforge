@@ -1,15 +1,31 @@
 "use client";
 
+import { useEffect } from "react";
 import { useParams } from "next/navigation";
 import { Loader2, FolderTree } from "lucide-react";
 import { useRepositoryData } from "@/hooks/use-repository-data";
 import { RepoHeader } from "@/components/repository/repo-header";
 import { LanguageBreakdown } from "@/components/repository/language-breakdown";
 import { MarkdownViewer } from "@/components/shared/markdown-viewer";
+import { useRecentReposStore } from "@/store/recent-repos-store";
 
 export default function RepositoryOverviewPage() {
     const params = useParams<{ owner: string; repo: string }>();
     const { data, loading, error } = useRepositoryData(params.owner, params.repo);
+    const addRecentRepo = useRecentReposStore((s) => s.addRecentRepo);
+
+    useEffect(() => {
+        if (data) {
+            addRecentRepo({
+                owner: params.owner,
+                repo: params.repo,
+                fullName: data.fullName,
+                description: data.description,
+                primaryLanguage: data.primaryLanguage,
+                fileCount: data.fileCount,
+            });
+        }
+    }, [data, params.owner, params.repo, addRecentRepo]);
 
     if (loading) {
         return (

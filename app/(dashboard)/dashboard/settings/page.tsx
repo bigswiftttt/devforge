@@ -13,6 +13,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useTheme, type ThemeSetting } from "@/hooks/use-theme";
 import { PreferencesSection } from "./preferences-section";
+import { useAuth } from "@/hooks/use-auth";
 
 /**
  * Stitch design tokens (hardcoded as arbitrary Tailwind values since these
@@ -175,6 +176,7 @@ export default function SettingsPage() {
     const [githubConnected, setGithubConnected] = useState(false);
     const [savingProfile, setSavingProfile] = useState(false);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const { signOut } = useAuth();
 
     const [notifyAnalysis, setNotifyAnalysis] = useState(true);
     const [notifySecurity, setNotifySecurity] = useState(true);
@@ -459,13 +461,9 @@ export default function SettingsPage() {
                             </p>
                         </div>
                         <button
-                            onClick={async () => {
-                                const supabase = createClient();
-                                await supabase.auth.signOut();
-                                window.location.href = "/login";
-                            }}
-                            className="px-4 py-2 rounded font-mono text-[11px] font-semibold uppercase tracking-[0.05em] border transition-colors hover:bg-white/5"
-                            style={{ borderColor: c.outlineVariant, color: c.onSurface }}
+                            onClick={signOut}
+                            className="px-4 py-2 rounded font-mono text-[11px] font-semibold uppercase tracking-[0.05em] transition-opacity hover:opacity-90"
+                            style={{ background: c.secondaryContainer, color: c.onSurface }}
                         >
                             Sign out
                         </button>

@@ -17,6 +17,11 @@ export default function DependenciesPage() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        if (data) {
+            document.title = `${data.fullName} | DevForge`;
+        }
+    }, [data]);
+    useEffect(() => {
         async function run() {
             try {
                 const supabase = createClient();

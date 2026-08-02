@@ -14,8 +14,24 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "DevForge | Command Center for your Codebase",
-  description: "AI-powered repository intelligence platform",
+  metadataBase: new URL("https://devforge-ms.vercel.app"),
+  title: {
+    default: "DevForge | Command Center for your Codebase",
+    template: "%s | DevForge",
+  },
+  description: "AI-powered repository intelligence platform — parse structure, visualize architecture and dependencies, and get AI-generated engineering insights.",
+  openGraph: {
+    title: "DevForge | Command Center for your Codebase",
+    description: "AI-powered repository intelligence platform — parse structure, visualize architecture and dependencies, and get AI-generated engineering insights.",
+    url: "https://devforge-ms.vercel.app",
+    siteName: "DevForge",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "DevForge | Command Center for your Codebase",
+    description: "AI-powered repository intelligence platform.",
+  },
 };
 
 export default function RootLayout({

@@ -1,95 +1,74 @@
-import { Timer, ShieldAlert, Copy, PinIcon, Server, Wallet, LineChart } from "lucide-react";
-import { MetricCard } from "@/components/metrics/metric-card";
-import { RepositoryCard } from "@/components/repository/repository-card";
+"use client";
+
+import Link from "next/link";
+import { Clock, FolderGit2, Search } from "lucide-react";
+import { useRecentReposStore } from "@/store/recent-repos-store";
+import { RecentRepoCard } from "@/components/repository/recent-repo-card";
+import { EmptyState } from "@/components/shared/empty-state";
+import { Button } from "@/components/ui/button";
 
 export default function DashboardPage() {
+    const repos = useRecentReposStore((s) => s.repos);
+
     return (
         <div className="p-lg lg:p-xl space-y-xl">
-            <header className="flex flex-col md:flex-row md:items-end justify-between gap-md">
-                <div>
-                    <p className="text-label-caps text-primary mb-1 uppercase">System Overview</p>
-                    <h1 className="text-headline-lg text-foreground tracking-tight">
-                        Engineer Intelligence Console
-                    </h1>
-                </div>
-                <div className="flex items-center gap-md bg-muted p-1 rounded-xl border border-border">
-                    <button className="px-4 py-2 bg-card text-foreground rounded-lg text-label-caps">
-                        Live
-                    </button>
-                    <button className="px-4 py-2 text-muted-foreground rounded-lg text-label-caps">
-                        Historical
-                    </button>
-                </div>
+            <header>
+                <p className="text-label-caps text-primary mb-1 uppercase">System Overview</p>
+                <h1 className="text-headline-lg text-foreground tracking-tight">
+                    Engineer Intelligence Console
+                </h1>
             </header>
 
-            <section className="grid grid-cols-1 md:grid-cols-3 gap-lg">
-                <MetricCard
-                    label="Total Analysis Hours"
-                    value="1,284.5"
-                    icon={Timer}
-                    trend="+12% from last month"
-                    trendDirection="up"
-                    accent="primary"
-                />
-                <MetricCard
-                    label="Security Vulnerabilities"
-                    value="08"
-                    icon={ShieldAlert}
-                    trend="3 Critical, 5 High"
-                    trendDirection="down"
-                    accent="destructive"
-                />
-                <MetricCard
-                    label="Code Duplication"
-                    value="4.2%"
-                    icon={Copy}
-                    trend="Below target (5.0%)"
-                    trendDirection="neutral"
-                    accent="tertiary"
-                />
+            <section className="grid grid-cols-1 md:grid-cols-2 gap-lg">
+                <div className="bg-card border border-border rounded-xl p-lg">
+                    <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                        <FolderGit2 className="size-4" />
+                        <p className="text-label-caps uppercase">Repositories Analyzed</p>
+                    </div>
+                    <h2 className="text-headline-md text-primary">{repos.length}</h2>
+                    <p className="text-body-sm text-muted-foreground mt-1">In this browser</p>
+                </div>
+
+                <div className="bg-card border border-border rounded-xl p-lg">
+                    <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                        <Clock className="size-4" />
+                        <p className="text-label-caps uppercase">Last Analyzed</p>
+                    </div>
+                    <h2 className="text-headline-md text-foreground truncate">
+                        {repos[0]?.fullName ?? "—"}
+                    </h2>
+                    <p className="text-body-sm text-muted-foreground mt-1">
+                        {repos[0] ? "See recent repositories below" : "No repositories yet"}
+                    </p>
+                </div>
             </section>
 
             <section className="space-y-md">
                 <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-sm">
-                        <PinIcon className="size-5 text-primary" />
-                        <h3 className="text-headline-sm text-foreground">Pinned Repositories</h3>
-                    </div>
-                    <button className="text-primary text-label-caps hover:underline">View All Repos</button>
+                    <h3 className="text-headline-sm text-foreground">Recent Repositories</h3>
+                    <Link href="/dashboard/repositories">
+                        <Button variant="outline" size="sm" className="gap-2">
+                            <Search className="size-4" />
+                            Analyze a repository
+                        </Button>
+                    </Link>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-lg">
-                    <RepositoryCard
-                        name="core-api-gateway"
-                        branch="main"
-                        language="node-js"
-                        icon={Server}
-                        healthScore={94}
-                        healthColor="primary"
-                        insight="Refactoring needed in auth module; potential circular dependency detected."
-                        sparklinePath="M0 50 Q50 20 100 45 T200 15 T300 35 T400 10"
+                {repos.length === 0 ? (
+                    <EmptyState
+                        icon={FolderGit2}
+                        title="No repositories analyzed yet"
+                        description="Search for a GitHub repository to get started with real parsing, architecture visualization, and AI insights."
+                        actionLabel="Analyze a repository"
+                        onAction={() => (window.location.href = "/dashboard/repositories")}
                     />
-                    <RepositoryCard
-                        name="billing-engine-v3"
-                        branch="staging"
-                        language="go-lang"
-                        icon={Wallet}
-                        healthScore={62}
-                        healthColor="destructive"
-                        insight="Major duplication found in data-mapper service. 3 critical security risks."
-                        sparklinePath="M0 10 Q50 15 100 40 T200 55 T300 45 T400 58"
-                    />
-                    <RepositoryCard
-                        name="ml-model-pipeline"
-                        branch="dev"
-                        language="python"
-                        icon={LineChart}
-                        healthScore={88}
-                        healthColor="tertiary"
-                        insight="Latency bottleneck in preprocessing script. Upgrade to v2.4 libraries."
-                        sparklinePath="M0 40 Q50 35 100 20 T200 25 T300 22 T400 18"
-                    />
-                </div>
+                ) : (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-lg">
+                        {repos.map((repo) => (
+                            <RecentRepoCard key={repo.fullName} repo={repo} />
+                        ))}
+                    </div>
+                )}
             </section>
         </div>
     );
