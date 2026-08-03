@@ -1,29 +1,27 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Search, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { parseRepoInput, fetchRepoMetadata, type GithubRepoMetadata } from "@/lib/github/client";
+import { parseRepoInput, fetchRepoMetadata } from "@/lib/github/client";
 import { useAuth } from "@/hooks/use-auth";
 import { createClient } from "@/lib/auth/supabase";
 
-interface RepositorySearchProps {
-    onResult: (metadata: GithubRepoMetadata) => void;
-}
-
-export function RepositorySearch({ onResult }: RepositorySearchProps) {
+export function RepositorySearch() {
     const [input, setInput] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const { user } = useAuth();
+    const router = useRouter();
 
     async function handleSearch() {
         setError(null);
 
         const parsed = parseRepoInput(input);
         if (!parsed) {
-            setError("Enter a repo as \"owner/repo\" or a full GitHub URL.");
+            setError('Enter a repo as "owner/repo" or a full GitHub URL.');
             return;
         }
 
@@ -38,18 +36,32 @@ export function RepositorySearch({ onResult }: RepositorySearchProps) {
             const {
                 data: { session },
             } = await supabase.auth.getSession();
-            const accessToken = session?.provider_token;
+
+            if (!session?.user) {
+                setError("Not authenticated.");
+                return;
+            }
+
+            const { data: profile } = await supabase
+                .from("profiles")
+                .select("github_access_token")
+                .eq("id", session.user.id)
+                .single();
+
+            const accessToken = profile?.github_access_token;
 
             if (!accessToken) {
                 setError("GitHub access token not found. Try signing out and back in.");
                 return;
             }
 
-            const metadata = await fetchRepoMetadata(parsed.owner, parsed.repo, accessToken);
-            onResult(metadata);
+            // Quick existence check before navigating — gives a clean error
+            // ("repo not found") instead of navigating to a page that fails.
+            await fetchRepoMetadata(parsed.owner, parsed.repo, accessToken);
+
+            router.push(`/dashboard/repositories/${parsed.owner}/${parsed.repo}`);
         } catch (err) {
             setError(err instanceof Error ? err.message : "Something went wrong.");
-        } finally {
             setLoading(false);
         }
     }
