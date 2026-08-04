@@ -140,3 +140,36 @@ export function parseRepoInput(input: string): { owner: string; repo: string } |
 
     return null;
 }
+export interface GithubUserRepo {
+    id: number;
+    name: string;
+    full_name: string;
+    description: string | null;
+    language: string | null;
+    stargazers_count: number;
+    updated_at: string;
+    private: boolean;
+    owner: {
+        login: string;
+        avatar_url: string;
+    };
+}
+
+export async function fetchUserRepos(accessToken: string): Promise<GithubUserRepo[]> {
+    const res = await fetch(
+        "https://api.github.com/user/repos?type=public&sort=updated&per_page=100",
+        {
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+                Accept: "application/vnd.github+json",
+            },
+        },
+    );
+
+    if (!res.ok) {
+        throw new Error(`Failed to fetch your repositories: ${res.status}`);
+    }
+
+    const repos: GithubUserRepo[] = await res.json();
+    return repos.filter((r) => !r.private);
+}
