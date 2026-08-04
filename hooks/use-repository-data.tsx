@@ -23,14 +23,9 @@ export function useRepositoryData(owner: string, repo: string) {
                 const {
                     data: { session },
                 } = await supabase.auth.getSession();
-                const accessToken = session?.provider_token;
+                const accessToken = session?.provider_token ?? undefined;
 
-                if (!accessToken) {
-                    if (!cancelled) setError("No GitHub access token found.");
-                    return;
-                }
-
-                const result = await parseRepository(owner, repo, accessToken);
+                const result = await parseRepository(owner, repo, accessToken ?? "");
                 if (!cancelled) {
                     setData(result);
                     setCurrentRepository(result);

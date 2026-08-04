@@ -5,8 +5,6 @@ import {
     fetchReadme,
     fetchRecentCommits,
     fetchPackageJson,
-    fetchGitignore,
-    fetchPackageLock,
 } from "@/lib/github/client";
 import type { NormalizedRepository, FileNode, LanguageBreakdown, CommitSummary } from "@/types/repository";
 
@@ -17,15 +15,13 @@ export async function parseRepository(
 ): Promise<NormalizedRepository> {
     const metadata = await fetchRepoMetadata(owner, repo, accessToken);
 
-    const [tree, languagesRaw, readme, commitsRaw, packageJsonRaw, gitignoreContent, packageLock] =
+    const [tree, languagesRaw, readme, commitsRaw, packageJsonRaw] =
         await Promise.all([
             fetchRepoTree(owner, repo, metadata.default_branch, accessToken),
             fetchRepoLanguages(owner, repo, accessToken),
             fetchReadme(owner, repo, accessToken),
             fetchRecentCommits(owner, repo, accessToken),
             fetchPackageJson(owner, repo, accessToken),
-            fetchGitignore(owner, repo, accessToken),
-            fetchPackageLock(owner, repo, accessToken),
         ]);
 
     const fileTree: FileNode[] = tree.map((item) => ({
@@ -77,7 +73,7 @@ export async function parseRepository(
                 devDependencies: (packageJsonRaw.devDependencies as Record<string, string>) ?? {},
             }
             : null,
-        gitignoreContent,
-        packageLock,
+        gitignoreContent: null,
+        packageLock: null,
     };
 }

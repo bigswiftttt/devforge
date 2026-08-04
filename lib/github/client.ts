@@ -28,14 +28,17 @@ interface GithubCommit {
     };
 }
 
-function githubHeaders(accessToken: string) {
-    return {
-        Authorization: `Bearer ${accessToken}`,
+function githubHeaders(accessToken?: string) {
+    const headers: Record<string, string> = {
         Accept: "application/vnd.github+json",
     };
+    if (accessToken) {
+        headers.Authorization = `Bearer ${accessToken}`;
+    }
+    return headers;
 }
 
-async function githubFetch<T>(url: string, accessToken: string): Promise<T> {
+async function githubFetch<T>(url: string, accessToken?: string): Promise<T> {
     const res = await fetch(url, { headers: githubHeaders(accessToken) });
     if (!res.ok) {
         if (res.status === 404) throw new Error("Not found on GitHub.");
@@ -48,7 +51,7 @@ async function githubFetch<T>(url: string, accessToken: string): Promise<T> {
 export async function fetchRepoMetadata(
     owner: string,
     repo: string,
-    accessToken: string,
+    accessToken?: string,
 ): Promise<GithubRepoMetadata> {
     return githubFetch(`https://api.github.com/repos/${owner}/${repo}`, accessToken);
 }
@@ -57,7 +60,7 @@ export async function fetchRepoTree(
     owner: string,
     repo: string,
     branch: string,
-    accessToken: string,
+    accessToken?: string,
 ): Promise<GithubTreeItem[]> {
     const data = await githubFetch<{ tree: GithubTreeItem[]; truncated: boolean }>(
         `https://api.github.com/repos/${owner}/${repo}/git/trees/${branch}?recursive=1`,
@@ -69,7 +72,7 @@ export async function fetchRepoTree(
 export async function fetchRepoLanguages(
     owner: string,
     repo: string,
-    accessToken: string,
+    accessToken?: string,
 ): Promise<Record<string, number>> {
     return githubFetch(`https://api.github.com/repos/${owner}/${repo}/languages`, accessToken);
 }
@@ -77,7 +80,7 @@ export async function fetchRepoLanguages(
 export async function fetchReadme(
     owner: string,
     repo: string,
-    accessToken: string,
+    accessToken?: string,
 ): Promise<string | null> {
     try {
         const data = await githubFetch<{ content: string; encoding: string }>(
@@ -96,7 +99,7 @@ export async function fetchReadme(
 export async function fetchRecentCommits(
     owner: string,
     repo: string,
-    accessToken: string,
+    accessToken?: string,
 ): Promise<GithubCommit[]> {
     return githubFetch(
         `https://api.github.com/repos/${owner}/${repo}/commits?per_page=10`,
@@ -107,7 +110,7 @@ export async function fetchRecentCommits(
 export async function fetchPackageJson(
     owner: string,
     repo: string,
-    accessToken: string,
+    accessToken?: string,
 ): Promise<Record<string, unknown> | null> {
     try {
         const data = await githubFetch<{ content: string; encoding: string }>(
@@ -136,37 +139,4 @@ export function parseRepoInput(input: string): { owner: string; repo: string } |
     }
 
     return null;
-}
-export async function fetchGitignore(
-    owner: string,
-    repo: string,
-    accessToken: string,
-): Promise<string | null> {
-    try {
-        const data = await githubFetch<{ content: string; encoding: string }>(
-            `https://api.github.com/repos/${owner}/${repo}/contents/.gitignore`,
-            accessToken,
-        );
-        return data.encoding === "base64" ? Buffer.from(data.content, "base64").toString("utf-8") : data.content;
-    } catch {
-        return null;
-    }
-}
-
-export async function fetchPackageLock(
-    owner: string,
-    repo: string,
-    accessToken: string,
-): Promise<Record<string, unknown> | null> {
-    try {
-        const data = await githubFetch<{ content: string; encoding: string }>(
-            `https://api.github.com/repos/${owner}/${repo}/contents/package-lock.json`,
-            accessToken,
-        );
-        const decoded =
-            data.encoding === "base64" ? Buffer.from(data.content, "base64").toString("utf-8") : data.content;
-        return JSON.parse(decoded);
-    } catch {
-        return null;
-    }
 }
